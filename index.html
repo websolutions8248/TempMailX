@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Temp Mail — mail.tm</title>
+  <style>
+    :root{
+      --bg:#0b0f17;
+      --card:#121a27;
+      --muted:#9fb0c7;
+      --text:#e8f0ff;
+      --line:#243149;
+      --btn:#2b6fff;
+      --btn2:#7c3aed;
+      --danger:#ff3b5c;
+      --ok:#2ee59d;
+      --warn:#ffcc66;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      background:linear-gradient(180deg,#070a10,#0b0f17 30%);
+      color:var(--text);
+    }
+
+    /* Topbar */
+    .topbar{
+      position:sticky; top:0; z-index:10;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 18px;
+      background:rgba(7,10,16,.82);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid var(--line);
+    }
+    .brand{display:flex; gap:12px; align-items:center}
+    .logo{
+      width:42px;height:42px;border-radius:14px;
+      display:grid;place-items:center;
+      background:linear-gradient(135deg,var(--btn),var(--btn2));
+      font-weight:900;
+      box-shadow:0 10px 25px rgba(43,111,255,.25);
+      user-select:none;
+    }
+    .title{font-size:18px;font-weight:900; letter-spacing:.2px}
+    .sub{font-size:12px;color:var(--muted)}
+    .actions{display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end}
+    .btn{
+      border:0; cursor:pointer;
+      padding:10px 14px;border-radius:12px;
+      background:var(--btn); color:white; font-weight:800;
+      transition:transform .08s ease, opacity .15s ease;
+      user-select:none;
+    }
+    .btn:active{transform:scale(.98)}
+    .btnOutline{
+      background:transparent;
+      border:1px solid var(--line);
+      color:var(--text);
+    }
+    .btnDanger{
+      background:transparent;
+      border:1px solid rgba(255,59,92,.35);
+      color:#ffd0d8;
+    }
+
+    /* Layout */
+    .container{
+      max-width:1100px;
+      margin:16px auto;
+      padding:0 14px 30px;
+      display:grid;
+      gap:14px;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap:14px;
+      align-items:start;
+    }
+    @media (max-width: 920px){
+      .grid{grid-template-columns:1fr}
+      .actions{gap:8px}
+    }
+
+    /* Cards */
+    .card{
+      background:rgba(18,26,39,.93);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+      box-shadow:0 10px 30px rgba(0,0,0,.25);
+    }
+    .card h2{margin:0 0 10px 0;font-size:16px}
+    .cardHead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .pill{
+      background:rgba(43,111,255,.15);
+      border:1px solid rgba(43,111,255,.35);
+      padding:6px 10px;
+      border-radius:999px;
+      font-weight:900;
+      font-size:12px;
+    }
+
+    /* Fields */
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    @media (max-width: 720px){ .row{grid-template-columns:1fr} }
+    .field label{font-size:12px;color:var(--muted)}
+    .value{
+      margin-top:6px;
+      padding:10px 12px;
+      background:rgba(11,15,23,.6);
+      border:1px solid rgba(36,49,73,.8);
+      border-radius:12px;
+      min-height:44px;
+      display:flex;align-items:center; gap:10px;
+      overflow:hidden;
+    }
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    .value .grow{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+    .hint{font-size:12px;color:var(--muted)}
+    .inline{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .btnSmall{
+      padding:8px 12px;border-radius:10px;
+      border:1px solid var(--line);
+      background:transparent;color:var(--text);
+      cursor:pointer;font-weight:800;
+      user-select:none;
+    }
+    .btnSmall:active{transform:scale(.98)}
+    .btnSmall.ok{border-color:rgba(46,229,157,.35); color:#d7ffef}
+    .btnSmall.warn{border-color:rgba(255,204,102,.35); color:#ffe8b8}
+
+    /* Status */
+    .statusDot{
+      width:10px;height:10px;border-radius:999px;
+      background:rgba(159,176,199,.4);
+      box-shadow:0 0 0 4px rgba(159,176,199,.10);
+      flex:0 0 auto;
+    }
+    .statusDot.ok{
+      background:var(--ok);
+      box-shadow:0 0 0 4px rgba(46,229,157,.12);
+    }
+    .statusDot.bad{
+      background:var(--danger);
+      box-shadow:0 0 0 4px rgba(255,59,92,.12);
+    }
+    .statusDot.warn{
+      background:var(--warn);
+      box-shadow:0 0 0 4px rgba(255,204,102,.12);
+    }
+
+    /* Inbox list */
+    .list{display:flex; flex-direction:column; gap:10px}
+    .msg{
+      border:1px solid rgba(36,49,73,.8);
+      background:rgba(11,15,23,.55);
+      border-radius:14px;
+      padding:10px;
+      cursor:pointer;
+      transition:border-color .15s ease, transform .08s ease;
+    }
+    .msg:hover{border-color:rgba(43,111,255,.6)}
+    .msg:active{transform:scale(.995)}
+    .msgTop{display:flex;justify-content:space-between;gap:10px; align-items:flex-start}
+    .msgTitle{font-weight:900}
+    .msgSub{color:var(--muted); font-size:12px; margin-top:6px; line-height:1.35}
+    .small{font-size:12px;color:var(--muted)}
+    .badgeNew{
+      font-size:11px;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid rgba(46,229,157,.35);
+      background:rgba(46,229,157,.10);
+      color:#d7ffef;
+      font-weight:900;
+      margin-left:8px;
+    }
+
+    /* Viewer */
+    .viewer{
+      border:1px solid rgba(36,49,73,.8);
+      background:rgba(11,15,23,.55);
+      border-radius:14px;
+      padding:12px;
+      min-height:160px;
+      overflow:hidden;
+    }
+    .viewer h3{margin:0 0 8px 0; font-size:15px}
+    .meta{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px}
+    .meta span{
+      font-size:12px;
+      color:var(--muted);
+      border:1px solid rgba(36,49,73,.8);
+      padding:6px 10px;
+      border-radius:999px;
+    }
+    .meta b{color:var(--text)}
+    .viewer pre{
+      white-space:pre-wrap;
+      word-wrap:break-word;
+      margin:0;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+      color:var(--text);
+      line-height:1.4;
+    }
+    .hr{
+      border:0;
+      border-top:1px solid rgba(36,49,73,.8);
+      margin:12px 0;
+    }
+    .empty{
+      padding:18px;
+      color:var(--muted);
+      text-align:center;
+    }
+
+    /* Footer note */
+    .footNote{
+      color:var(--muted);
+      font-size:12px;
+      padding:10px 2px 0;
+      opacity:.95;
+    }
+
+    /* Toast */
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:18px;
+      transform:translateX(-50%);
+      background:rgba(18,26,39,.95);
+      border:1px solid rgba(36,49,73,.9);
+      border-radius:999px;
+      padding:10px 14px;
+      box-shadow:0 10px 30px rgba(0,0,0,.35);
+      color:var(--text);
+      font-weight:800;
+      font-size:13px;
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .15s ease, transform .15s ease;
+    }
+    .toast.show{
+      opacity:1;
+      transform:translateX(-50%) translateY(-2px);
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">TM</div>
+      <div>
+        <div class="title">Temp Mail</div>
+        <div class="sub">One-file GitHub Pages • mail.tm API</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="btnNew" class="btn">New Email</button>
+      <button id="btnCopyEmail" class="btn btnOutline">Copy Email</button>
+      <button id="btnRefresh" class="btn btnOutline">Refresh</button>
+      <button id="btnLogout" class="btn btnDanger">Clear</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <div class="cardHead">
+        <h2>Mailbox</h2>
+        <div class="pill" id="pillMode">Auto Refresh ON</div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Email</label>
+          <div class="value mono">
+            <div class="grow" id="email">—</div>
+            <button class="btnSmall ok" id="btnCopyMini">Copy</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Password (masked)</label>
+          <div class="value mono">
+            <div class="grow" id="pass">—</div>
+            <button class="btnSmall warn" id="btnShowPass">Show</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <div class="field">
+          <label>Status</label>
+          <div class="value">
+            <div class="statusDot" id="dot"></div>
+            <div class="grow" id="statusText">Click “New Email” to start.</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Auto Refresh (10s)</label>
+          <div class="value inline">
+            <input id="autoRefresh" type="checkbox" checked />
+            <span class="hint">Inbox auto-update</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="footNote">
+        Tip: Any OTP / verification email will appear in Inbox. Click a message to open it.
+      </div>
+    </section>
+
+    <div class="grid">
+      <section class="card">
+        <div class="cardHead">
+          <h2>Inbox</h2>
+          <div class="pill"><span id="count">0</span> messages</div>
+        </div>
+        <div id="list" class="list">
+          <div class="empty">No messages yet.</div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="cardHead">
+          <h2>Message</h2>
+          <div class="pill" id="otpPill" style="display:none">OTP: <span id="otpText"></span></div>
+        </div>
+        <div id="viewer" class="viewer">
+          <div class="empty">Open a message to view details.</div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div class="toast" id="toast">Copied ✅</div>
+
+  <script>
+    // ===== mail.tm one-file app (GitHub Pages) =====
+    const API = "https://api.mail.tm";
+
+    const $ = (id) => document.getElementById(id);
+
+    const elEmail = $("email");
+    const elPass = $("pass");
+    const elStatusText = $("statusText");
+    const elDot = $("dot");
+    const elList = $("list");
+    const elViewer = $("viewer");
+    const elCount = $("count");
+    const autoRefresh = $("autoRefresh");
+    const pillMode = $("pillMode");
+    const otpPill = $("otpPill");
+    const otpText = $("otpText");
+    const toast = $("toast");
+
+    const btnNew = $("btnNew");
+    const btnCopyEmail = $("btnCopyEmail");
+    const btnCopyMini = $("btnCopyMini");
+    const btnRefresh = $("btnRefresh");
+    const btnLogout = $("btnLogout");
+    const btnShowPass = $("btnShowPass");
+
+    // Storage keys
+    const K_ADDR = "mailtm_address";
+    const K_PASS = "mailtm_password";
+    const K_TOK  = "mailtm_token";
+
+    let state = {
+      address: null,
+      password: null,
+      token: null,
+      timer: null,
+      lastIds: new Set(),
+      showPass: false
+    };
+
+    function escapeHtml(str){
+      return String(str).replace(/[&<>"']/g, (m) => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[m]));
+    }
+
+    function rand(n=8){
+      const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+      let s=""; for(let i=0;i<n;i++) s+=chars[Math.floor(Math.random()*chars.length)];
+      return s;
+    }
+
+    function strongPass(){
+      return rand(10) + "#@" + rand(4);
+    }
+
+    function setStatus(text, type="neutral"){
+      elStatusText.textContent = text;
+      elDot.className = "statusDot";
+      if(type === "ok") elDot.classList.add("ok");
+      if(type === "bad") elDot.classList.add("bad");
+      if(type === "warn") elDot.classList.add("warn");
+    }
+
+    function toastMsg(text){
+      toast.textContent = text;
+      toast.classList.add("show");
+      setTimeout(()=>toast.classList.remove("show"), 1100);
+    }
+
+    function save(){
+      localStorage.setItem(K_ADDR, state.address || "");
+      localStorage.setItem(K_PASS, state.password || "");
+      localStorage.setItem(K_TOK,  state.token || "");
+    }
+
+    function load(){
+      const a = localStorage.getItem(K_ADDR);
+      const p = localStorage.getItem(K_PASS);
+      const t = localStorage.getItem(K_TOK);
+      if(a && p && t){
+        state.address = a;
+        state.password = p;
+        state.token = t;
+        return true;
+      }
+      return false;
+    }
+
+    function clearSaved(){
+      localStorage.removeItem(K_ADDR);
+      localStorage.removeItem(K_PASS);
+      localStorage.removeItem(K_TOK);
+    }
+
+    function maskPass(pw){
+      if(!pw) return "—";
+      if(state.showPass) return pw;
+      if(pw.length < 4) return "***";
+      return pw.slice(0,2) + "*".repeat(Math.max(0, pw.length-4)) + pw.slice(-2);
+    }
+
+    function renderAccount(){
+      elEmail.textContent = state.address || "—";
+      elPass.textContent = maskPass(state.password);
+      btnShowPass.textContent = state.showPass ? "Hide" : "Show";
+    }
+
+    async function apiGET(path, token){
+      const res = await fetch(API + path, {
+        headers: token ? { "Authorization": `Bearer ${token}` } : {}
+      });
+      if(!res.ok){
+        const t = await res.text();
+        throw new Error(t || ("GET " + path + " failed"));
+      }
+      return await res.json();
+    }
+
+    async function apiPOST(path, body){
+      const res = await fetch(API + path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      if(!res.ok){
+        const t = await res.text();
+        throw new Error(t || ("POST " + path + " failed"));
+      }
+      return await res.json();
+    }
+
+    async function getDomains(){
+      const data = await apiGET("/domains");
+      const list = (data["hydra:member"] || []).map(d => d.domain).filter(Boolean);
+      if(!list.length) throw new Error("No domains available from mail.tm");
+      return list;
+    }
+
+    async function createAccount(address, password){
+      return await apiPOST("/accounts", { address, password });
+    }
+
+    async function getToken(address, password){
+      const data = await apiPOST("/token", { address, password });
+      if(!data.token) throw new Error("Token missing in response");
+      return data.token;
+    }
+
+    async function fetchMessages(){
+      const data = await apiGET("/messages", state.token);
+      return data["hydra:member"] || [];
+    }
+
+    async function readMessage(id){
+      return await apiGET(`/messages/${id}`, state.token);
+    }
+
+    function extractOTP(s){
+      if(!s) return null;
+      const m = String(s).match(/\b(\d{4,8})\b/);
+      return m ? m[1] : null;
+    }
+
+    function setOtpPill(val){
+      if(val){
+        otpText.textContent = val;
+        otpPill.style.display = "inline-flex";
+      }else{
+        otpPill.style.display = "none";
+        otpText.textContent = "";
+      }
+    }
+
+    function renderViewer(full){
+      const subj = full.subject || "(no subject)";
+      const from = (full.from && full.from.address) ? full.from.address : "(unknown)";
+      const to = (full.to && full.to.length) ? full.to.map(x=>x.address).join(", ") : "";
+      const created = full.createdAt ? new Date(full.createdAt).toLocaleString() : "";
+      const intro = full.intro || "";
+      const text = full.text || "";
+
+      let html = "";
+      if(Array.isArray(full.html)) html = full.html.join("\n");
+      else if(typeof full.html === "string") html = full.html;
+
+      const otp = extractOTP(text) || extractOTP(intro);
+      setOtpPill(otp);
+
+      elViewer.innerHTML = `
+        <h3>${escapeHtml(subj)}</h3>
+        <div class="meta">
+          <span>From: <b>${escapeHtml(from)}</b></span>
+          ${to ? `<span>To: <b>${escapeHtml(to)}</b></span>` : ""}
+          ${created ? `<span><b>${escapeHtml(created)}</b></span>` : ""}
+          ${otp ? `<span>OTP: <b>${escapeHtml(otp)}</b></span>` : ""}
+        </div>
+        <pre>${escapeHtml(text || "(No text body)")}</pre>
+        ${html ? `
+          <hr class="hr">
+          <div class="small">HTML body (raw preview):</div>
+          <pre>${escapeHtml(html.slice(0, 5000))}</pre>
+        ` : ""}
+      `;
+    }
+
+    function renderList(msgs){
+      elCount.textContent = String(msgs.length);
+
+      if(!msgs.length){
+        elList.innerHTML = `<div class="empty">No messages yet.</div>`;
+        return;
+      }
+
+      elList.innerHTML = "";
+      for(const m of msgs){
+        const id = m.id;
+        const subj = m.subject || "(no subject)";
+        const from = (m.from && m.from.address) ? m.from.address : "(unknown)";
+        const intro = m.intro || "";
+        const created = m.createdAt ? new Date(m.createdAt).toLocaleString() : "";
+        const isNew = id && !state.lastIds.has(id);
+
+        const div = document.createElement("div");
+        div.className = "msg";
+        div.innerHTML = `
+          <div class="msgTop">
+            <div class="msgTitle">
+              ${escapeHtml(subj)}
+              ${isNew ? `<span class="badgeNew">NEW</span>` : ""}
+            </div>
+            <div class="small">${escapeHtml(created)}</div>
+          </div>
+          <div class="msgSub">From: ${escapeHtml(from)}</div>
+          <div class="msgSub">${escapeHtml(intro)}</div>
+        `;
+
+        div.addEventListener("click", async () => {
+          setStatus("Opening message…", "warn");
+          try{
+            const full = await readMessage(id);
+            renderViewer(full);
+            setStatus("Message opened ✅", "ok");
+            if(id) state.lastIds.add(id);
+            // Re-render to remove NEW tag (optional)
+            // (cheap and fine for small inbox)
+            const fresh = await fetchMessages();
+            renderList(fresh);
+          }catch(e){
+            setStatus("Open failed ❌", "bad");
+            alert(String(e));
+          }
+        });
+
+        elList.appendChild(div);
+      }
+    }
+
+    async function refreshInbox(showToast=false){
+      if(!state.token){
+        setStatus("No active mailbox. Click “New Email”.", "warn");
+        return;
+      }
+      try{
+        setStatus("Fetching inbox…", "warn");
+        const msgs = await fetchMessages();
+
+        // Track new IDs
+        const before = state.lastIds.size;
+        msgs.forEach(m => { if(m.id) state.lastIds.add(m.id); });
+        const after = state.lastIds.size;
+        const newCount = Math.max(0, after - before);
+
+        renderList(msgs);
+
+        if(newCount > 0){
+          setStatus(`New messages: ${newCount} ✅`, "ok");
+          if(showToast) toastMsg(`New: ${newCount} ✅`);
+        }else{
+          setStatus("Inbox updated.", "ok");
+          if(showToast) toastMsg("Refreshed ✅");
+        }
+      }catch(e){
+        setStatus("Inbox failed ❌", "bad");
+        console.error(e);
+      }
+    }
+
+    async function makeNewEmail(){
+      // Reset UI bits
+      setOtpPill(null);
+      elViewer.innerHTML = `<div class="empty">Open a message to view details.</div>`;
+      elList.innerHTML = `<div class="empty">Loading…</div>`;
+      elCount.textContent = "0";
+      state.lastIds = new Set();
+
+      try{
+        setStatus("Getting available domains…", "warn");
+        const domains = await getDomains();
+        const domain = domains[Math.floor(Math.random()*domains.length)];
+        const user = "user" + rand(6);
+        const address = `${user}@${domain}`;
+        const password = strongPass();
+
+        setStatus("Creating account…", "warn");
+        // Create can fail if collision; if fails, still try token once.
+        try{
+          await createAccount(address, password);
+        }catch(e){
+          console.warn("Create account error:", e);
+        }
+
+        setStatus("Getting token…", "warn");
+        const token = await getToken(address, password);
+
+        state.address = address;
+        state.password = password;
+        state.token = token;
+        state.showPass = false;
+        save();
+
+        renderAccount();
+        setStatus("Mailbox ready ✅", "ok");
+        toastMsg("New email created ✅");
+        await refreshInbox(false);
+      }catch(e){
+        setStatus("Failed ❌", "bad");
+        alert("Error: " + St
