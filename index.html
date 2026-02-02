@@ -69,7 +69,7 @@
                 <div class="relative group">
                     <div class="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full blur opacity-20 group-hover:opacity-40 transition"></div>
                     <div class="relative bg-[#252f3f] rounded-full p-2 pl-6 flex items-center justify-between shadow-2xl border border-gray-600">
-                        <input type="text" id="email-address" readonly value="Generating..." 
+                        <input type="text" id="email-address" readonly value="Loading..." 
                             class="bg-transparent text-gray-200 text-sm sm:text-base w-full outline-none font-mono truncate mr-2 placeholder-gray-500">
                         
                         <div class="flex items-center gap-2 shrink-0">
@@ -118,8 +118,9 @@
             <div class="w-full h-24 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400">
                 <span class="text-xs font-bold uppercase tracking-widest">Adsterra Banner Area</span>
             </div>
-                      </div>
-                <div class="max-w-4xl mx-auto w-full px-4 mb-8">
+        </div>
+
+        <div class="max-w-4xl mx-auto w-full px-4 mb-8">
             <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden min-h-[400px] flex flex-col relative">
                 <div class="bg-[#1a202c] text-white flex text-xs font-bold uppercase tracking-wider py-3.5 px-5">
                     <div class="w-1/3">Sender</div>
@@ -200,8 +201,7 @@
                 </div>
             </div>
         </div>
-
-        <footer class="bg-[#1a202c] text-gray-400 py-10 mt-auto">
+         <footer class="bg-[#1a202c] text-gray-400 py-10 mt-auto">
             <div class="max-w-4xl mx-auto px-4 text-center">
                 <div class="w-full h-16 bg-gray-800 border border-gray-700 rounded mb-8 flex items-center justify-center text-xs">Adsterra Footer Ad</div>
                 
@@ -226,9 +226,9 @@
             <div class="w-8"></div>
         </div>
         <div id="overlay-content" class="max-w-3xl mx-auto p-4 md:p-6 w-full flex-grow"></div>
-  </div>  
+    </div>
 
-   <script>
+    <script>
         const API = "https://api.mail.tm";
         const emailEl = document.getElementById("email-address");
         const inboxList = document.getElementById("inboxList");
@@ -404,8 +404,15 @@
         }
 
         function deleteEmail() {
-            localStorage.removeItem("tm_token");
-            createAccount();
+            // 1. Immediate UI feedback
+            emailEl.value = "Deleting...";
+            inboxList.innerHTML = ''; // Clear inbox
+            localStorage.removeItem("tm_token"); // Clear session
+
+            // 2. Generate new within 2 seconds
+            setTimeout(() => {
+                createAccount();
+            }, 1000); 
         }
 
         function toggleQR() {
