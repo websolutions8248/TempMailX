@@ -1,672 +1,715 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Temp Mail — mail.tm</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Temp Mail</title>
   <style>
-    :root{
-      --bg:#0b0f17;
-      --card:#121a27;
-      --muted:#9fb0c7;
-      --text:#e8f0ff;
-      --line:#243149;
-      --btn:#2b6fff;
-      --btn2:#7c3aed;
-      --danger:#ff3b5c;
-      --ok:#2ee59d;
-      --warn:#ffcc66;
+    body { margin:0; font-family:'Segoe UI',sans-serif; background: linear-gradient(to bottom right, #e0f7fa, #e3f2fd); color:#1e1e1e; }
+    header { padding:20px; text-align:center; background:#fff; box-shadow:0 2px 4px rgba(0,0,0,0.05); }
+    .email-box { background:#fff; margin:20px; padding:20px; border:1px dashed #ccc; border-radius:10px; text-align:center; }
+    .email-address { background:#eef1f5; padding:10px; border-radius:5px; margin-top:10px; font-size:16px; word-break: break-all; }
+    .timer { font-size:14px; color:#ff0000; margin-top:5px; }
+    .email-desc { margin:15px 0; font-size:14px; color:#444; }
+    .btn-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:12px 0; }
+    .btn { padding:8px 0; background:#00C497; color:#fff; font-size:14px; border:none; border-radius:4px; cursor:pointer; width:100%; }
+    .btn:disabled{opacity:.6; cursor:not-allowed}
+    .inbox-wrapper { display: flex; margin: 20px; gap: 10px; }
+    .ad-side { flex: 1; background: #eef1f5; border: 2px dashed #aaa; border-radius: 5px; text-align: center; line-height: 400px; color: #666; min-width: 100px; }
+    .inbox-section { flex: 3; background:#fff; padding:20px; border-radius:10px; box-shadow:0 2px 4px rgba(0,0,0,0.05); height: 400px; overflow-y: auto; position: relative; }
+    .inbox-item { display:flex; justify-content:space-between; gap:10px; padding:12px; margin:6px 0; border:1px solid #ddd; border-radius:6px; background:#fafafa; align-items:flex-start; }
+    .inbox-item.empty { justify-content:center; color:#666; }
+    .inbox-item button { background:#00C497; border:none; color:#fff; padding:6px 12px; font-size:13px; border-radius:4px; cursor:pointer; white-space:nowrap; }
+    .loader-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; flex-direction: column; align-items: center; justify-content: center; }
+    .loader-circle { width: 60px; height: 60px; border: 4px solid #f3f3f3; border-top: 4px solid #00C497; border-radius: 50%; animation: spin 1s linear infinite; position: relative; }
+    .loader-icon .envelope-icon { position: absolute; top: 25%; left: 50%; transform: translate(-50%, -50%); font-size: 50px; color: #00C497; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .ad-placeholder { background:#eef1f5; height:60px; margin:20px; border:2px dashed #aaa; border-radius:5px; text-align:center; line-height:60px; color:#666; }
+    footer { padding:20px; text-align:center; background:#fff; font-size:12px; color:#999; border-top:1px solid #ddd; }
+    .footer-links { margin-top:10px; }
+    .footer-links a { margin: 0 10px; color: #00C497; text-decoration: none; font-weight: 500; }
+    .articles-section h3 { cursor: pointer; color: #00C497; margin-top: 20px; }
+    .article-content { display: none; padding-left: 15px; }
+    .info-section{ margin:20px; padding:16px; background:#fff; border-radius:10px; box-shadow:0 2px 4px rgba(0,0,0,0.05); }
+    .meta-mini{font-size:12px; color:#666; margin-top:8px}
+    .tag{display:inline-block; font-size:12px; background:#eef1f5; border:1px solid #ddd; padding:4px 8px; border-radius:999px; margin:0 6px}
+    .otp{color:#0b7; font-weight:700}
+    /* Modal */
+    .modal-backdrop{
+      position:fixed; inset:0; background:rgba(0,0,0,.35);
+      display:none; align-items:center; justify-content:center; padding:16px;
+      z-index:9999;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      background:linear-gradient(180deg,#070a10,#0b0f17 30%);
-      color:var(--text);
-    }
-
-    /* Topbar */
-    .topbar{
-      position:sticky; top:0; z-index:10;
-      display:flex; align-items:center; justify-content:space-between;
-      padding:14px 18px;
-      background:rgba(7,10,16,.82);
-      backdrop-filter: blur(10px);
-      border-bottom:1px solid var(--line);
-    }
-    .brand{display:flex; gap:12px; align-items:center}
-    .logo{
-      width:42px;height:42px;border-radius:14px;
-      display:grid;place-items:center;
-      background:linear-gradient(135deg,var(--btn),var(--btn2));
-      font-weight:900;
-      box-shadow:0 10px 25px rgba(43,111,255,.25);
-      user-select:none;
-    }
-    .title{font-size:18px;font-weight:900; letter-spacing:.2px}
-    .sub{font-size:12px;color:var(--muted)}
-    .actions{display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end}
-    .btn{
-      border:0; cursor:pointer;
-      padding:10px 14px;border-radius:12px;
-      background:var(--btn); color:white; font-weight:800;
-      transition:transform .08s ease, opacity .15s ease;
-      user-select:none;
-    }
-    .btn:active{transform:scale(.98)}
-    .btnOutline{
-      background:transparent;
-      border:1px solid var(--line);
-      color:var(--text);
-    }
-    .btnDanger{
-      background:transparent;
-      border:1px solid rgba(255,59,92,.35);
-      color:#ffd0d8;
-    }
-
-    /* Layout */
-    .container{
-      max-width:1100px;
-      margin:16px auto;
-      padding:0 14px 30px;
-      display:grid;
-      gap:14px;
-    }
-    .grid{
-      display:grid;
-      grid-template-columns: 1.05fr .95fr;
-      gap:14px;
-      align-items:start;
-    }
-    @media (max-width: 920px){
-      .grid{grid-template-columns:1fr}
-      .actions{gap:8px}
-    }
-
-    /* Cards */
-    .card{
-      background:rgba(18,26,39,.93);
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:14px;
-      box-shadow:0 10px 30px rgba(0,0,0,.25);
-    }
-    .card h2{margin:0 0 10px 0;font-size:16px}
-    .cardHead{display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .pill{
-      background:rgba(43,111,255,.15);
-      border:1px solid rgba(43,111,255,.35);
-      padding:6px 10px;
-      border-radius:999px;
-      font-weight:900;
-      font-size:12px;
-    }
-
-    /* Fields */
-    .row{display:grid; grid-template-columns:1fr 1fr; gap:12px}
-    @media (max-width: 720px){ .row{grid-template-columns:1fr} }
-    .field label{font-size:12px;color:var(--muted)}
-    .value{
-      margin-top:6px;
-      padding:10px 12px;
-      background:rgba(11,15,23,.6);
-      border:1px solid rgba(36,49,73,.8);
+    .modal{
+      width:min(900px, 96vw);
+      max-height:85vh;
+      overflow:auto;
+      background:#fff;
       border-radius:12px;
-      min-height:44px;
-      display:flex;align-items:center; gap:10px;
-      overflow:hidden;
+      box-shadow:0 12px 40px rgba(0,0,0,.25);
+      border:1px solid rgba(0,0,0,.08);
     }
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-    .value .grow{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-    .hint{font-size:12px;color:var(--muted)}
-    .inline{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
-    .btnSmall{
-      padding:8px 12px;border-radius:10px;
-      border:1px solid var(--line);
-      background:transparent;color:var(--text);
-      cursor:pointer;font-weight:800;
-      user-select:none;
+    .modal-head{
+      display:flex; justify-content:space-between; align-items:center;
+      padding:12px 14px; border-bottom:1px solid #eee;
+      position:sticky; top:0; background:#fff;
     }
-    .btnSmall:active{transform:scale(.98)}
-    .btnSmall.ok{border-color:rgba(46,229,157,.35); color:#d7ffef}
-    .btnSmall.warn{border-color:rgba(255,204,102,.35); color:#ffe8b8}
-
-    /* Status */
-    .statusDot{
-      width:10px;height:10px;border-radius:999px;
-      background:rgba(159,176,199,.4);
-      box-shadow:0 0 0 4px rgba(159,176,199,.10);
-      flex:0 0 auto;
+    .modal-head h4{margin:0; font-size:14px}
+    .modal-close{
+      background:#00C497; color:#fff; border:0; border-radius:8px;
+      padding:8px 10px; cursor:pointer;
     }
-    .statusDot.ok{
-      background:var(--ok);
-      box-shadow:0 0 0 4px rgba(46,229,157,.12);
-    }
-    .statusDot.bad{
-      background:var(--danger);
-      box-shadow:0 0 0 4px rgba(255,59,92,.12);
-    }
-    .statusDot.warn{
-      background:var(--warn);
-      box-shadow:0 0 0 4px rgba(255,204,102,.12);
-    }
-
-    /* Inbox list */
-    .list{display:flex; flex-direction:column; gap:10px}
-    .msg{
-      border:1px solid rgba(36,49,73,.8);
-      background:rgba(11,15,23,.55);
-      border-radius:14px;
-      padding:10px;
-      cursor:pointer;
-      transition:border-color .15s ease, transform .08s ease;
-    }
-    .msg:hover{border-color:rgba(43,111,255,.6)}
-    .msg:active{transform:scale(.995)}
-    .msgTop{display:flex;justify-content:space-between;gap:10px; align-items:flex-start}
-    .msgTitle{font-weight:900}
-    .msgSub{color:var(--muted); font-size:12px; margin-top:6px; line-height:1.35}
-    .small{font-size:12px;color:var(--muted)}
-    .badgeNew{
-      font-size:11px;
-      padding:4px 8px;
-      border-radius:999px;
-      border:1px solid rgba(46,229,157,.35);
-      background:rgba(46,229,157,.10);
-      color:#d7ffef;
-      font-weight:900;
-      margin-left:8px;
-    }
-
-    /* Viewer */
-    .viewer{
-      border:1px solid rgba(36,49,73,.8);
-      background:rgba(11,15,23,.55);
-      border-radius:14px;
-      padding:12px;
-      min-height:160px;
-      overflow:hidden;
-    }
-    .viewer h3{margin:0 0 8px 0; font-size:15px}
-    .meta{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px}
-    .meta span{
-      font-size:12px;
-      color:var(--muted);
-      border:1px solid rgba(36,49,73,.8);
-      padding:6px 10px;
-      border-radius:999px;
-    }
-    .meta b{color:var(--text)}
-    .viewer pre{
-      white-space:pre-wrap;
-      word-wrap:break-word;
-      margin:0;
-      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-      color:var(--text);
-      line-height:1.4;
-    }
-    .hr{
-      border:0;
-      border-top:1px solid rgba(36,49,73,.8);
-      margin:12px 0;
-    }
-    .empty{
-      padding:18px;
-      color:var(--muted);
-      text-align:center;
-    }
-
-    /* Footer note */
-    .footNote{
-      color:var(--muted);
-      font-size:12px;
-      padding:10px 2px 0;
-      opacity:.95;
-    }
-
-    /* Toast */
-    .toast{
-      position:fixed;
-      left:50%;
-      bottom:18px;
-      transform:translateX(-50%);
-      background:rgba(18,26,39,.95);
-      border:1px solid rgba(36,49,73,.9);
-      border-radius:999px;
-      padding:10px 14px;
-      box-shadow:0 10px 30px rgba(0,0,0,.35);
-      color:var(--text);
-      font-weight:800;
-      font-size:13px;
-      opacity:0;
-      pointer-events:none;
-      transition:opacity .15s ease, transform .15s ease;
-    }
-    .toast.show{
-      opacity:1;
-      transform:translateX(-50%) translateY(-2px);
-    }
+    .modal-body{padding:14px}
+    pre{white-space:pre-wrap; word-break:break-word; margin:0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px; color:#222;}
+    .warn{color:#b00; font-weight:600}
   </style>
 </head>
 
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <div class="logo">TM</div>
-      <div>
-        <div class="title">Temp Mail</div>
-        <div class="sub">One-file GitHub Pages • mail.tm API</div>
+  <header><h1>Temp Mail</h1></header>
+
+  <div class="email-box">
+    <div>Your Temporary Email Address</div>
+    <div class="email-address" id="email-address">—</div>
+    <div class="timer" id="timer">10:00</div>
+    <p class="email-desc">
+      Keep spam and hacking away! Temp Mail gives you a secure, anonymous, and disposable email address that protects your real inbox.
+    </p>
+
+    <div class="btn-grid">
+      <button class="btn" id="btnCopy" onclick="copyEmail()">Copy</button>
+      <button class="btn" id="btnRefresh" onclick="refreshEmail()">Refresh</button>
+      <button class="btn" id="btnChange" onclick="changeEmail()">Change</button>
+      <button class="btn" id="btnDelete" onclick="deleteEmail()">Delete</button>
+    </div>
+
+    <div class="meta-mini">
+      <span class="tag" id="domainTag">domain: —</span>
+      <span class="tag" id="statusTag">status: ready</span>
+      <span class="tag" id="otpTag" style="display:none;">OTP: <span class="otp" id="otpValue"></span></span>
+    </div>
+  </div>
+
+  <div class="ad-placeholder">Ad Area 1</div>
+
+  <div class="inbox-wrapper">
+    <div class="ad-side">Ad Left</div>
+
+    <div class="inbox-section">
+      <h3>Inbox</h3>
+
+      <div class="loader-icon" id="loader">
+        <div class="loader-circle"></div>
+        <div class="envelope-icon">&#9993;</div>
+        <span>Checking mail...</span>
+      </div>
+
+      <div id="inboxList">
+        <div class="inbox-item empty">Your inbox is empty<br>Waiting for incoming emails</div>
       </div>
     </div>
 
-    <div class="actions">
-      <button id="btnNew" class="btn">New Email</button>
-      <button id="btnCopyEmail" class="btn btnOutline">Copy Email</button>
-      <button id="btnRefresh" class="btn btnOutline">Refresh</button>
-      <button id="btnLogout" class="btn btnDanger">Clear</button>
+    <div class="ad-side">Ad Right</div>
+  </div>
+
+  <div class="ad-placeholder">Ad Area 2</div>
+
+  <div class="info-section">
+    <h2>What is Disposable Temporary E-mail?</h2>
+    <p>Disposable email – a free email address that self-destructs after a certain time, keeping your real inbox clean and spam-free.</p>
+  </div>
+
+  <div class="articles-section">
+    <h2>Popular Articles</h2>
+    <ul>
+      <li>
+        <h3 onclick="toggleArticle(this)">New Temp Mail Android App (2025)</h3>
+        <div class="article-content">
+          <p>Are you tired of spam emails flooding your inbox every time you sign up on a new website or app?</p>
+          <p>In 2025, protecting your digital identity is more important than ever. That’s why the new Temp Mail Android App is a must-have tool for anyone who values privacy, security, and simplicity.</p>
+          <p>Whether you're a developer, tester, or just someone who wants a clean inbox, this app makes it effortless to generate and manage temporary email addresses on the go.</p>
+          <p><strong>🚀 What is the Temp Mail Android App?</strong></p>
+          <ul>
+            <li>Create a random temp email</li>
+            <li>Receive messages and OTPs</li>
+            <li>Copy, refresh, or delete the address</li>
+            <li>Avoid spam and stay anonymous</li>
+          </ul>
+          <p><strong>🆕 What’s New in the 2025 Version?</strong></p>
+          <ul>
+            <li>✅ One-Click Email Generation</li>
+            <li>✅ Real-Time Push Notifications</li>
+            <li>✅ Multiple Inbox Support</li>
+            <li>✅ Dark Mode Interface</li>
+            <li>✅ QR Code Scan & Share</li>
+            <li>✅ Secure Message Storage</li>
+            <li>✅ Smart Filters</li>
+          </ul>
+        </div>
+      </li>
+
+      <li>
+        <h3 onclick="toggleArticle(this)">How to Receive SMS OTP Online (2025)</h3>
+        <div class="article-content">
+          <p>In today’s fast-paced digital world, almost every website or app requires a One-Time Password (OTP) to verify your identity. But what if you don’t want to use your personal mobile number?</p>
+          <ul>
+            <li>Sign up on a new website without spam</li>
+            <li>Bypass phone verification during testing</li>
+            <li>Register for a service without exposing your real number</li>
+            <li>Access multiple accounts on the same platform</li>
+          </ul>
+          <p>This is where receiving SMS OTP online becomes incredibly useful.</p>
+          <p><strong>🧾 What is an Online SMS Receive Service?</strong></p>
+          <ul>
+            <li>Receive SMS OTPs</li>
+            <li>Bypass mobile number verification</li>
+            <li>Use for temporary registrations</li>
+          </ul>
+
+          <p><strong>🔐 Why Use Online SMS Services in 2025?</strong></p>
+          <ul>
+            <li>✅ Privacy</li>
+            <li>✅ Spam Protection</li>
+            <li>✅ Multiple Accounts</li>
+            <li>✅ Free or Low Cost</li>
+          </ul>
+        </div>
+      </li>
+
+      <li>
+        <h3 onclick="toggleArticle(this)">Best Anonymous Registration Games (2025)</h3>
+        <div class="article-content">
+          <p>Anonymous registration games are perfect for privacy-focused gamers.</p>
+          <ul>
+            <li>✅ No personal email required</li>
+            <li>✅ No real-name policy</li>
+            <li>✅ Quick guest access</li>
+            <li>✅ Great for testing or casual play</li>
+          </ul>
+          <p>Top anonymous-friendly games include:</p>
+          <ul>
+            <li>• Krunker.io</li>
+            <li>• Agar.io</li>
+            <li>• Shell Shockers</li>
+            <li>• War Brokers</li>
+            <li>• Paper.io</li>
+          </ul>
+        </div>
+      </li>
+
+      <li>
+        <h3 onclick="toggleArticle(this)">What is Ransomware?</h3>
+        <div class="article-content">
+          <p>Ransomware is a type of malicious software (malware) that locks or encrypts your files and demands payment (ransom) to unlock them.</p>
+          <p><strong>🛡️ How Does It Work?</strong></p>
+          <p>Ransomware usually spreads through phishing emails, malicious downloads, or software vulnerabilities.</p>
+          <p><strong>🔐 How to Protect Yourself?</strong></p>
+          <ul>
+            <li>✅ Never click unknown email links or attachments</li>
+            <li>✅ Use antivirus & firewall protection</li>
+            <li>✅ Keep backups of your files</li>
+            <li>✅ Update all software regularly</li>
+          </ul>
+        </div>
+      </li>
+
+      <li>
+        <h3 onclick="toggleArticle(this)">Temp Mail for Facebook, etc.</h3>
+        <div class="article-content">
+          <p>Temp Mail lets you register quickly and anonymously. It’s perfect for:</p>
+          <ul>
+            <li>✅ Creating multiple social accounts</li>
+            <li>✅ Avoiding spam and tracking</li>
+            <li>✅ Testing account setups</li>
+          </ul>
+          <p>⚠️ Note: Some services may block temp emails, so try different domains or use premium temp mail services when needed.</p>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <div class="ad-placeholder">Ad Area 3</div>
+
+  <footer>
+    TEMP MAIL | Disposable Email Service | © 2025
+    <div class="footer-links">
+      <a href="#" onclick="toggleSection('privacy')">Privacy</a>
+      <a href="#" onclick="toggleSection('terms')">Terms</a>
+      <a href="#" onclick="toggleSection('faq')">FAQ</a>
+      <a href="#" onclick="toggleSection('contact')">Contact</a>
     </div>
-  </header>
 
-  <main class="container">
-    <section class="card">
-      <div class="cardHead">
-        <h2>Mailbox</h2>
-        <div class="pill" id="pillMode">Auto Refresh ON</div>
-      </div>
-
-      <div class="row">
-        <div class="field">
-          <label>Email</label>
-          <div class="value mono">
-            <div class="grow" id="email">—</div>
-            <button class="btnSmall ok" id="btnCopyMini">Copy</button>
-          </div>
-        </div>
-
-        <div class="field">
-          <label>Password (masked)</label>
-          <div class="value mono">
-            <div class="grow" id="pass">—</div>
-            <button class="btnSmall warn" id="btnShowPass">Show</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="row" style="margin-top:12px">
-        <div class="field">
-          <label>Status</label>
-          <div class="value">
-            <div class="statusDot" id="dot"></div>
-            <div class="grow" id="statusText">Click “New Email” to start.</div>
-          </div>
-        </div>
-
-        <div class="field">
-          <label>Auto Refresh (10s)</label>
-          <div class="value inline">
-            <input id="autoRefresh" type="checkbox" checked />
-            <span class="hint">Inbox auto-update</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="footNote">
-        Tip: Any OTP / verification email will appear in Inbox. Click a message to open it.
-      </div>
-    </section>
-
-    <div class="grid">
-      <section class="card">
-        <div class="cardHead">
-          <h2>Inbox</h2>
-          <div class="pill"><span id="count">0</span> messages</div>
-        </div>
-        <div id="list" class="list">
-          <div class="empty">No messages yet.</div>
-        </div>
-      </section>
-
-      <section class="card">
-        <div class="cardHead">
-          <h2>Message</h2>
-          <div class="pill" id="otpPill" style="display:none">OTP: <span id="otpText"></span></div>
-        </div>
-        <div id="viewer" class="viewer">
-          <div class="empty">Open a message to view details.</div>
-        </div>
-      </section>
+    <div id="privacy" style="display:none; margin-top:10px; text-align:left; font-size:13px; color:#444;">
+      <strong>Privacy Policy:</strong><br><br>
+      We do not store your personal data. All temporary emails are automatically deleted after a short period. No tracking, no logging. We may use cookies only for session management and UI improvement.<br><br>
+      Temp Mail does not associate generated emails with users' IP addresses or other identifiable details. Our servers log minimal and anonymous usage statistics solely for monitoring service performance and detecting abuse (such as bots or mass scraping). We do not use third-party analytics or share any user data with advertisers.<br><br>
+      Since this is a public-facing temporary service, we highly recommend not using Temp Mail for receiving sensitive information such as banking credentials, passwords, or identity documents.<br><br>
+      For privacy concerns, contact: <strong>jhonhamare@gmail.com</strong>
     </div>
-  </main>
 
-  <div class="toast" id="toast">Copied ✅</div>
+    <div id="terms" style="display:none; margin-top:10px; text-align:left; font-size:13px; color:#444;">
+      <strong>Terms of Use:</strong><br><br>
+      Use this service at your own risk. Do not use for illegal or sensitive activities. We are not responsible for any misuse or data loss. Temporary emails are deleted frequently.<br><br>
+      For legal queries: <strong>jhonhamare@gmail.com</strong>
+    </div>
+
+    <div id="faq" style="display:none; margin-top:10px; text-align:left; font-size:13px; color:#444;">
+      <strong>FAQ:</strong><br><br>
+      <strong>Q: Is Temp Mail free?</strong><br>
+      A: Yes, completely free.<br><br>
+      <strong>Q: How long does an email stay active?</strong><br>
+      A: Usually 10 to 60 minutes.<br><br>
+      <strong>Q: Can I use this for account recovery or banking?</strong><br>
+      A: No. It is meant for temporary registrations only.<br><br>
+      Still confused? Email us at: <strong>jhonhamare@gmail.com</strong>
+    </div>
+
+    <div id="contact" style="display:none; margin-top:10px; text-align:left; font-size:13px; color:#444;">
+      <strong>Contact Us:</strong><br><br>
+      If you have any questions, feedback, or complaints, feel free to email:<br>
+      <strong>jhonhamare@gmail.com</strong>
+    </div>
+  </footer>
+
+  <!-- Message Modal -->
+  <div class="modal-backdrop" id="modalBackdrop" onclick="closeModal(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <h4 id="modalTitle">Message</h4>
+        <button class="modal-close" onclick="closeModal()">Close</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
 
   <script>
-    // ===== mail.tm one-file app (GitHub Pages) =====
+    /***********************
+     * REAL mail.tm LOGIC  *
+     ***********************/
     const API = "https://api.mail.tm";
 
-    const $ = (id) => document.getElementById(id);
+    // UI helpers
+    const loader = document.getElementById("loader");
+    const inboxList = document.getElementById("inboxList");
+    const emailEl = document.getElementById("email-address");
+    const domainTag = document.getElementById("domainTag");
+    const statusTag = document.getElementById("statusTag");
+    const otpTag = document.getElementById("otpTag");
+    const otpValue = document.getElementById("otpValue");
 
-    const elEmail = $("email");
-    const elPass = $("pass");
-    const elStatusText = $("statusText");
-    const elDot = $("dot");
-    const elList = $("list");
-    const elViewer = $("viewer");
-    const elCount = $("count");
-    const autoRefresh = $("autoRefresh");
-    const pillMode = $("pillMode");
-    const otpPill = $("otpPill");
-    const otpText = $("otpText");
-    const toast = $("toast");
+    const btnCopy = document.getElementById("btnCopy");
+    const btnRefresh = document.getElementById("btnRefresh");
+    const btnChange = document.getElementById("btnChange");
+    const btnDelete = document.getElementById("btnDelete");
 
-    const btnNew = $("btnNew");
-    const btnCopyEmail = $("btnCopyEmail");
-    const btnCopyMini = $("btnCopyMini");
-    const btnRefresh = $("btnRefresh");
-    const btnLogout = $("btnLogout");
-    const btnShowPass = $("btnShowPass");
+    // Timer (10 min)
+    let timerInterval = null;
+    let timeLeft = 600;
 
-    // Storage keys
-    const K_ADDR = "mailtm_address";
-    const K_PASS = "mailtm_password";
-    const K_TOK  = "mailtm_token";
+    // Auto refresh inbox
+    let inboxPoll = null;
 
-    let state = {
-      address: null,
-      password: null,
-      token: null,
-      timer: null,
-      lastIds: new Set(),
-      showPass: false
-    };
+    // Local storage keys
+    const LS_ADDR = "tm_address";
+    const LS_PASS = "tm_password";
+    const LS_TOKEN = "tm_token";
+    const LS_DOMAIN = "tm_domain";
 
-    function escapeHtml(str){
-      return String(str).replace(/[&<>"']/g, (m) => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-      }[m]));
+    function setStatus(text) {
+      statusTag.textContent = "status: " + text;
     }
 
-    function rand(n=8){
-      const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-      let s=""; for(let i=0;i<n;i++) s+=chars[Math.floor(Math.random()*chars.length)];
-      return s;
+    function showLoader(show) {
+      loader.style.display = show ? "flex" : "none";
     }
 
-    function strongPass(){
-      return rand(10) + "#@" + rand(4);
-    }
-
-    function setStatus(text, type="neutral"){
-      elStatusText.textContent = text;
-      elDot.className = "statusDot";
-      if(type === "ok") elDot.classList.add("ok");
-      if(type === "bad") elDot.classList.add("bad");
-      if(type === "warn") elDot.classList.add("warn");
-    }
-
-    function toastMsg(text){
-      toast.textContent = text;
-      toast.classList.add("show");
-      setTimeout(()=>toast.classList.remove("show"), 1100);
-    }
-
-    function save(){
-      localStorage.setItem(K_ADDR, state.address || "");
-      localStorage.setItem(K_PASS, state.password || "");
-      localStorage.setItem(K_TOK,  state.token || "");
-    }
-
-    function load(){
-      const a = localStorage.getItem(K_ADDR);
-      const p = localStorage.getItem(K_PASS);
-      const t = localStorage.getItem(K_TOK);
-      if(a && p && t){
-        state.address = a;
-        state.password = p;
-        state.token = t;
-        return true;
+    function setOTP(val) {
+      if (val) {
+        otpValue.textContent = val;
+        otpTag.style.display = "inline-block";
+      } else {
+        otpValue.textContent = "";
+        otpTag.style.display = "none";
       }
-      return false;
     }
 
-    function clearSaved(){
-      localStorage.removeItem(K_ADDR);
-      localStorage.removeItem(K_PASS);
-      localStorage.removeItem(K_TOK);
+    function updateTimerDisplay() {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      document.getElementById("timer").innerText =
+        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
 
-    function maskPass(pw){
-      if(!pw) return "—";
-      if(state.showPass) return pw;
-      if(pw.length < 4) return "***";
-      return pw.slice(0,2) + "*".repeat(Math.max(0, pw.length-4)) + pw.slice(-2);
+    function startTimer() {
+      timeLeft = 600;
+      updateTimerDisplay();
+      if (timerInterval) clearInterval(timerInterval);
+
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay();
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          // Auto rotate mailbox after 10 minutes
+          changeEmail();
+        }
+      }, 1000);
     }
 
-    function renderAccount(){
-      elEmail.textContent = state.address || "—";
-      elPass.textContent = maskPass(state.password);
-      btnShowPass.textContent = state.showPass ? "Hide" : "Show";
+    function disableButtons(disabled) {
+      btnCopy.disabled = disabled;
+      btnRefresh.disabled = disabled;
+      btnChange.disabled = disabled;
+      btnDelete.disabled = disabled;
     }
 
-    async function apiGET(path, token){
+    function saveSession(address, password, token, domain) {
+      localStorage.setItem(LS_ADDR, address || "");
+      localStorage.setItem(LS_PASS, password || "");
+      localStorage.setItem(LS_TOKEN, token || "");
+      localStorage.setItem(LS_DOMAIN, domain || "");
+    }
+
+    function loadSession() {
+      const address = localStorage.getItem(LS_ADDR) || "";
+      const password = localStorage.getItem(LS_PASS) || "";
+      const token = localStorage.getItem(LS_TOKEN) || "";
+      const domain = localStorage.getItem(LS_DOMAIN) || "";
+      if (address && password && token) return { address, password, token, domain };
+      return null;
+    }
+
+    function clearSession() {
+      localStorage.removeItem(LS_ADDR);
+      localStorage.removeItem(LS_PASS);
+      localStorage.removeItem(LS_TOKEN);
+      localStorage.removeItem(LS_DOMAIN);
+    }
+
+    async function apiGET(path, token) {
       const res = await fetch(API + path, {
         headers: token ? { "Authorization": `Bearer ${token}` } : {}
       });
-      if(!res.ok){
-        const t = await res.text();
-        throw new Error(t || ("GET " + path + " failed"));
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || ("GET " + path + " failed"));
       }
       return await res.json();
     }
 
-    async function apiPOST(path, body){
+    async function apiPOST(path, body) {
       const res = await fetch(API + path, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body)
       });
-      if(!res.ok){
-        const t = await res.text();
-        throw new Error(t || ("POST " + path + " failed"));
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || ("POST " + path + " failed"));
       }
       return await res.json();
     }
 
-    async function getDomains(){
+    function rand(n=8) {
+      const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+      let s = "";
+      for (let i=0;i<n;i++) s += chars[Math.floor(Math.random()*chars.length)];
+      return s;
+    }
+
+    function strongPass() {
+      return rand(10) + "#@" + rand(4);
+    }
+
+    async function getAvailableDomain() {
       const data = await apiGET("/domains");
       const list = (data["hydra:member"] || []).map(d => d.domain).filter(Boolean);
-      if(!list.length) throw new Error("No domains available from mail.tm");
-      return list;
+      if (!list.length) throw new Error("No domains available from mail.tm");
+      return list[Math.floor(Math.random() * list.length)];
     }
 
-    async function createAccount(address, password){
-      return await apiPOST("/accounts", { address, password });
+    async function createMailbox() {
+      setStatus("creating mailbox...");
+      showLoader(true);
+
+      const domain = await getAvailableDomain();
+      const user = "user" + rand(6);
+      const address = `${user}@${domain}`;
+      const password = strongPass();
+
+      // Create account (can fail if collision, then retry once)
+      try {
+        await apiPOST("/accounts", { address, password });
+      } catch (e) {
+        // Retry once with new address
+        const user2 = "user" + rand(7);
+        const address2 = `${user2}@${domain}`;
+        await apiPOST("/accounts", { address: address2, password });
+        return { address: address2, password, domain };
+      }
+
+      return { address, password, domain };
     }
 
-    async function getToken(address, password){
+    async function loginToken(address, password) {
       const data = await apiPOST("/token", { address, password });
-      if(!data.token) throw new Error("Token missing in response");
+      if (!data.token) throw new Error("Token not received");
       return data.token;
     }
 
-    async function fetchMessages(){
-      const data = await apiGET("/messages", state.token);
-      return data["hydra:member"] || [];
+    async function refreshInboxReal() {
+      const session = loadSession();
+      if (!session) {
+        inboxList.innerHTML = `<div class="inbox-item empty">No mailbox yet. Click Change to generate one.</div>`;
+        return;
+      }
+
+      setOTP(null);
+      setStatus("checking inbox...");
+      showLoader(true);
+
+      try {
+        const data = await apiGET("/messages", session.token);
+        const msgs = data["hydra:member"] || [];
+
+        if (!msgs.length) {
+          inboxList.innerHTML = `<div class="inbox-item empty">Your inbox is empty<br>Waiting for incoming emails</div>`;
+          setStatus("inbox empty");
+          return;
+        }
+
+        // Render messages
+        inboxList.innerHTML = msgs.map(m => {
+          const from = (m.from && m.from.address) ? m.from.address : "unknown";
+          const subj = m.subject || "(no subject)";
+          const intro = m.intro || "";
+          const created = m.createdAt ? new Date(m.createdAt).toLocaleString() : "";
+          return `
+            <div class="inbox-item">
+              <div style="flex:1; min-width:0;">
+                <div style="font-weight:700; margin-bottom:4px;">${escapeHtml(subj)}</div>
+                <div style="font-size:12px; color:#666;">From: ${escapeHtml(from)} • ${escapeHtml(created)}</div>
+                <div style="font-size:12px; color:#444; margin-top:6px;">${escapeHtml(intro)}</div>
+              </div>
+              <button onclick="openMessage('${m.id}')">Open</button>
+            </div>
+          `;
+        }).join("");
+
+        setStatus(`messages: ${msgs.length}`);
+      } catch (e) {
+        console.error(e);
+        setStatus("token expired / error");
+        inboxList.innerHTML = `
+          <div class="inbox-item empty">
+            <div>
+              <div class="warn">Inbox error.</div>
+              <div style="font-size:12px; margin-top:6px;">
+                Try Change (new email) or Refresh again.
+              </div>
+            </div>
+          </div>
+        `;
+      } finally {
+        showLoader(false);
+      }
     }
 
-    async function readMessage(id){
-      return await apiGET(`/messages/${id}`, state.token);
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, (m) => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[m]));
     }
 
-    function extractOTP(s){
-      if(!s) return null;
+    async function openMessage(id) {
+      const session = loadSession();
+      if (!session) return;
+
+      setStatus("opening message...");
+      showLoader(true);
+
+      try {
+        const full = await apiGET(`/messages/${id}`, session.token);
+        const subj = full.subject || "(no subject)";
+        const from = (full.from && full.from.address) ? full.from.address : "unknown";
+        const intro = full.intro || "";
+        const text = full.text || "";
+        let html = "";
+        if (Array.isArray(full.html)) html = full.html.join("\n");
+        else if (typeof full.html === "string") html = full.html;
+
+        // OTP detect
+        const otp = extractOTP(text) || extractOTP(intro);
+        setOTP(otp);
+
+        // Show in modal
+        document.getElementById("modalTitle").textContent = subj;
+        document.getElementById("modalBody").innerHTML = `
+          <div style="font-size:12px; color:#666; margin-bottom:10px;">
+            <div><b>From:</b> ${escapeHtml(from)}</div>
+            ${otp ? `<div><b>OTP:</b> <span class="otp">${escapeHtml(otp)}</span></div>` : ""}
+          </div>
+          <div style="font-size:12px; color:#666; margin-bottom:6px;"><b>Text Body</b></div>
+          <pre>${escapeHtml(text || "(No text body)")}</pre>
+          ${html ? `
+            <hr class="hr">
+            <div style="font-size:12px; color:#666; margin-bottom:6px;"><b>HTML (raw preview)</b></div>
+            <pre>${escapeHtml(html.slice(0, 6000))}</pre>
+          ` : ""}
+        `;
+        document.getElementById("modalBackdrop").style.display = "flex";
+
+        setStatus("message opened");
+      } catch (e) {
+        console.error(e);
+        alert("Open failed: " + String(e));
+        setStatus("open failed");
+      } finally {
+        showLoader(false);
+      }
+    }
+
+    function extractOTP(s) {
+      if (!s) return null;
       const m = String(s).match(/\b(\d{4,8})\b/);
       return m ? m[1] : null;
     }
 
-    function setOtpPill(val){
-      if(val){
-        otpText.textContent = val;
-        otpPill.style.display = "inline-flex";
-      }else{
-        otpPill.style.display = "none";
-        otpText.textContent = "";
+    function closeModal(ev) {
+      if (!ev || ev.target.id === "modalBackdrop") {
+        document.getElementById("modalBackdrop").style.display = "none";
       }
     }
 
-    function renderViewer(full){
-      const subj = full.subject || "(no subject)";
-      const from = (full.from && full.from.address) ? full.from.address : "(unknown)";
-      const to = (full.to && full.to.length) ? full.to.map(x=>x.address).join(", ") : "";
-      const created = full.createdAt ? new Date(full.createdAt).toLocaleString() : "";
-      const intro = full.intro || "";
-      const text = full.text || "";
+    /***********************
+     * BUTTON FUNCTIONS    *
+     ***********************/
+    async function copyEmail() {
+      const email = emailEl.innerText.trim();
+      if (!email || email === "—" || email === "Deleted...") return alert("No email to copy");
 
-      let html = "";
-      if(Array.isArray(full.html)) html = full.html.join("\n");
-      else if(typeof full.html === "string") html = full.html;
-
-      const otp = extractOTP(text) || extractOTP(intro);
-      setOtpPill(otp);
-
-      elViewer.innerHTML = `
-        <h3>${escapeHtml(subj)}</h3>
-        <div class="meta">
-          <span>From: <b>${escapeHtml(from)}</b></span>
-          ${to ? `<span>To: <b>${escapeHtml(to)}</b></span>` : ""}
-          ${created ? `<span><b>${escapeHtml(created)}</b></span>` : ""}
-          ${otp ? `<span>OTP: <b>${escapeHtml(otp)}</b></span>` : ""}
-        </div>
-        <pre>${escapeHtml(text || "(No text body)")}</pre>
-        ${html ? `
-          <hr class="hr">
-          <div class="small">HTML body (raw preview):</div>
-          <pre>${escapeHtml(html.slice(0, 5000))}</pre>
-        ` : ""}
-      `;
-    }
-
-    function renderList(msgs){
-      elCount.textContent = String(msgs.length);
-
-      if(!msgs.length){
-        elList.innerHTML = `<div class="empty">No messages yet.</div>`;
-        return;
-      }
-
-      elList.innerHTML = "";
-      for(const m of msgs){
-        const id = m.id;
-        const subj = m.subject || "(no subject)";
-        const from = (m.from && m.from.address) ? m.from.address : "(unknown)";
-        const intro = m.intro || "";
-        const created = m.createdAt ? new Date(m.createdAt).toLocaleString() : "";
-        const isNew = id && !state.lastIds.has(id);
-
-        const div = document.createElement("div");
-        div.className = "msg";
-        div.innerHTML = `
-          <div class="msgTop">
-            <div class="msgTitle">
-              ${escapeHtml(subj)}
-              ${isNew ? `<span class="badgeNew">NEW</span>` : ""}
-            </div>
-            <div class="small">${escapeHtml(created)}</div>
-          </div>
-          <div class="msgSub">From: ${escapeHtml(from)}</div>
-          <div class="msgSub">${escapeHtml(intro)}</div>
-        `;
-
-        div.addEventListener("click", async () => {
-          setStatus("Opening message…", "warn");
-          try{
-            const full = await readMessage(id);
-            renderViewer(full);
-            setStatus("Message opened ✅", "ok");
-            if(id) state.lastIds.add(id);
-            // Re-render to remove NEW tag (optional)
-            // (cheap and fine for small inbox)
-            const fresh = await fetchMessages();
-            renderList(fresh);
-          }catch(e){
-            setStatus("Open failed ❌", "bad");
-            alert(String(e));
-          }
-        });
-
-        elList.appendChild(div);
+      try {
+        await navigator.clipboard.writeText(email);
+        alert("Copied: " + email);
+      } catch {
+        // fallback
+        const ta = document.createElement("textarea");
+        ta.value = email;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+        alert("Copied: " + email);
       }
     }
 
-    async function refreshInbox(showToast=false){
-      if(!state.token){
-        setStatus("No active mailbox. Click “New Email”.", "warn");
-        return;
-      }
-      try{
-        setStatus("Fetching inbox…", "warn");
-        const msgs = await fetchMessages();
+    async function refreshEmail() {
+      await refreshInboxReal();
+    }
 
-        // Track new IDs
-        const before = state.lastIds.size;
-        msgs.forEach(m => { if(m.id) state.lastIds.add(m.id); });
-        const after = state.lastIds.size;
-        const newCount = Math.max(0, after - before);
+    async function changeEmail() {
+      disableButtons(true);
+      setOTP(null);
+      inboxList.innerHTML = `<div class="inbox-item empty">Generating new mailbox…</div>`;
 
-        renderList(msgs);
+      try {
+        showLoader(true);
+        setStatus("generating new email...");
+        const { address, password, domain } = await createMailbox();
+        const token = await loginToken(address, password);
 
-        if(newCount > 0){
-          setStatus(`New messages: ${newCount} ✅`, "ok");
-          if(showToast) toastMsg(`New: ${newCount} ✅`);
-        }else{
-          setStatus("Inbox updated.", "ok");
-          if(showToast) toastMsg("Refreshed ✅");
-        }
-      }catch(e){
-        setStatus("Inbox failed ❌", "bad");
+        // Save & render
+        saveSession(address, password, token, domain);
+
+        emailEl.innerText = address;
+        domainTag.textContent = "domain: " + domain;
+        setStatus("ready");
+        startTimer();
+
+        // Refresh inbox now
+        await refreshInboxReal();
+
+        // Start polling (every 10s)
+        if (inboxPoll) clearInterval(inboxPoll);
+        inboxPoll = setInterval(() => refreshInboxReal(), 10000);
+
+      } catch (e) {
         console.error(e);
+        setStatus("failed");
+        inboxList.innerHTML = `<div class="inbox-item empty"><span class="warn">Failed to create mailbox.</span><br>${escapeHtml(String(e))}</div>`;
+      } finally {
+        showLoader(false);
+        disableButtons(false);
       }
     }
 
-    async function makeNewEmail(){
-      // Reset UI bits
-      setOtpPill(null);
-      elViewer.innerHTML = `<div class="empty">Open a message to view details.</div>`;
-      elList.innerHTML = `<div class="empty">Loading…</div>`;
-      elCount.textContent = "0";
-      state.lastIds = new Set();
+    async function deleteEmail() {
+      disableButtons(true);
+      setOTP(null);
+      setStatus("deleted");
+      emailEl.innerText = "Deleted...";
+      domainTag.textContent = "domain: —";
+      inboxList.innerHTML = `<div class="inbox-item empty">Mailbox cleared.</div>`;
+      clearSession();
+      if (inboxPoll) clearInterval(inboxPoll);
+      if (timerInterval) clearInterval(timerInterval);
 
-      try{
-        setStatus("Getting available domains…", "warn");
-        const domains = await getDomains();
-        const domain = domains[Math.floor(Math.random()*domains.length)];
-        const user = "user" + rand(6);
-        const address = `${user}@${domain}`;
-        const password = strongPass();
+      setTimeout(async () => {
+        disableButtons(false);
+        await changeEmail();
+      }, 1200);
+    }
 
-        setStatus("Creating account…", "warn");
-        // Create can fail if collision; if fails, still try token once.
-        try{
-          await createAccount(address, password);
-        }catch(e){
-          console.warn("Create account error:", e);
-        }
+    /***********************
+     * UI TOGGLES          *
+     ***********************/
+    function toggleArticle(header) {
+      const content = header.nextElementSibling;
+      content.style.display = content.style.display === 'block' ? 'none' : 'block';
+    }
 
-        setStatus("Getting token…", "warn");
-        const token = await getToken(address, password);
+    function toggleSection(id) {
+      const section = document.getElementById(id);
+      const sectionContainer = document.querySelector('.info-section');
+      const allSections = ['privacy', 'terms', 'faq', 'contact'];
 
-        state.address = address;
-        state.password = password;
-        state.token = token;
-        state.showPass = false;
-        save();
+      allSections.forEach(secId => {
+        const sec = document.getElementById(secId);
+        if (sec && sec !== section) sec.style.display = 'none';
+      });
 
-        renderAccount();
-        setStatus("Mailbox ready ✅", "ok");
-        toastMsg("New email created ✅");
-        await refreshInbox(false);
-      }catch(e){
-        setStatus("Failed ❌", "bad");
-        alert("Error: " + St
+      if (section.style.display === 'block') {
+        section.style.display = 'none';
+      } else {
+        section.style.display = 'block';
+        sectionContainer.parentNode.insertBefore(section, sectionContainer);
+        section.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    /***********************
+     * STARTUP             *
+     ***********************/
+    window.onload = async () => {
+      disableButtons(false);
+      setOTP(null);
+
+      // If session exists, reuse it
+      const session = loadSession();
+      if (session) {
+        emailEl.innerText = session.address;
+        domainTag.textContent = "domain: " + (session.domain || session.address.split("@")[1] || "—");
+        setStatus("ready");
+        startTimer();
+        await refreshInboxReal();
+
+        if (inboxPoll) clearInterval(inboxPoll);
+        inboxPoll = setInterval(() => refreshInboxReal(), 10000);
+      } else {
+        // auto-generate first mailbox
+        await changeEmail();
+      }
+    };
+  </script>
+</body>
+</html>
