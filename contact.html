@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - Mailvex Support</title>
+    <meta name="description" content="Have questions or feedback about Mailvex? Reach out to our support team for help with temporary emails, bug reports, or partnership inquiries.">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Inter', sans-serif; background-color: #f9fafb; }</style>
+</head>
+<body class="flex flex-col min-h-screen text-gray-800">
+
+    <nav class="bg-[#1a202c] border-b border-gray-700 sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-[#1e293b] rounded-xl shadow-lg border border-gray-700 overflow-hidden">
+                    <img src="favicon.png" alt="Logo" class="w-full h-full object-cover transform scale-150">
+                </div>
+                <span class="text-xl font-bold text-white tracking-wide">Mailvex</span>
+            </a>
+            <a href="index.html" class="text-gray-300 hover:text-white text-sm font-medium">&larr; Back to Home</a>
+        </div>
+    </nav>
+
+    <div class="flex-grow max-w-4xl mx-auto w-full px-4 py-12">
+        <div class="grid md:grid-cols-5 gap-8">
+            
+            <div class="md:col-span-2 space-y-6">
+                <h1 class="text-4xl font-extrabold text-gray-900 leading-tight">Get in Touch with Us</h1>
+                <p class="text-gray-600 leading-relaxed">Have a question about our temporary email service? Found a bug? Or just want to say hello? Our team is here to help you.</p>
+                
+                <div class="space-y-4 pt-4">
+                    <div class="flex items-start gap-4 p-4 bg-white rounded-2xl shadow-sm border border-gray-200">
+                        <div class="bg-indigo-600 p-3 rounded-xl text-white">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-gray-400 uppercase">Email Support</p>
+                            <a href="mailto:jhonhamare@gmail.com" class="font-bold text-indigo-600 hover:underline">jhonhamare@gmail.com</a>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4 p-4 bg-white rounded-2xl shadow-sm border border-gray-200">
+                        <div class="bg-indigo-600 p-3 rounded-xl text-white">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-gray-400 uppercase">Response Time</p>
+                            <p class="font-bold text-gray-800">Within 24-48 Hours</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 bg-indigo-50 rounded-2xl border border-indigo-100">
+                    <h3 class="font-bold text-indigo-900 mb-2">Helpful Tips</h3>
+                    <ul class="text-xs text-indigo-700 space-y-2 list-disc pl-4">
+                        <li>Include your browser name and device type for bug reports.</li>
+                        <li>For partnership inquiries, use a clear subject line.</li>
+                        <li>Check our FAQ on the homepage before reaching out.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="md:col-span-3">
+                <div class="bg-white p-8 rounded-3xl shadow-lg border border-gray-200">
+                    <form onsubmit="handleForm(event)" class="space-y-6">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Full Name</label>
+                                <input type="text" id="name" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition" placeholder="John Doe" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Email Address</label>
+                                <input type="email" id="email" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition" placeholder="john@example.com" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Subject</label>
+                            <select id="subject" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                                <option>General Inquiry</option>
+                                <option>Bug Report</option>
+                                <option>Advertising / Partnership</option>
+                                <option>Legal / Privacy Issue</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Message</label>
+                            <textarea id="message" rows="6" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition" placeholder="How can we help you today?" required></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-indigo-700 transition transform active:scale-95">
+                            Send Message
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-20 prose max-w-none text-gray-700">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Why Contact Mailvex?</h2>
+            <p>Mailvex is dedicated to providing the world's most secure and anonymous temporary email service. While our system is designed to be fully automated and frictionless, we understand that users may occasionally need direct assistance. Whether you are experiencing technical difficulties, have a suggestion for a new feature, or represent a business looking for a custom integration, we are all ears.</p>
+            
+            <h3>Technical Support</h3>
+            <p>Is the mail generator not working? Are you not receiving verification codes from a specific website? Our technical team constantly monitors our domain reputation and API health. When you report a delivery issue, we investigate if a specific service provider has blacklisted our domains and we work to rotate them to ensure your sign-up flows remain uninterrupted.</p>
+
+            <h3>Business and Advertising</h3>
+            <p>With thousands of daily active users who care about privacy, Mailvex offers a unique audience for advertisers. If you are interested in placing native ads or have other business proposals, please use the contact form above and our business development manager will get back to you with our media kit.</p>
+
+            <h3>Feedback and Suggestions</h3>
+            <p>Mailvex was built by users, for users. If you think there is a way to make our interface faster, our inbox more intuitive, or our QR code feature better, please let us know. We read every single email we receive and many of our best features were suggested by our community.</p>
+        </div>
+    </div>
+
+    <footer class="bg-[#1a202c] text-center py-8 text-gray-500 text-sm mt-auto border-t border-gray-700">
+        <p>&copy; 2026 Mailvex. All rights reserved.</p>
+    </footer>
+
+    <script>
+        function handleForm(e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const sub = document.getElementById('subject').value;
+            const msg = document.getElementById('message').value;
+            
+            // Redirects to default email client with pre-filled info
+            window.location.href = `mailto:jhonhamare@gmail.com?subject=${encodeURIComponent(sub + ' - from ' + name)}&body=${encodeURIComponent(msg)}`;
+        }
+    </script>
+</body>
+</html>
