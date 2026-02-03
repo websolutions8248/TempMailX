@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Sitemap: https://tempmaiil.xo.je/sitemap.xml
+
+# Neeche wo folder likhein jahan user ke inbox khulte hain
+# Taaki Google logon ke personal emails na padhe.
+Disallow: /mailbox/
+Disallow: /email/
