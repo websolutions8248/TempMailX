@@ -16,13 +16,8 @@
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
         
-        /* Spinner */
-        .loader-spin {
-            border: 3px solid rgba(255, 255, 255, 0.1);
-            border-top: 3px solid #3b82f6;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
+        /* Spinner Animation */
+        .animate-spin {
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -69,7 +64,7 @@
                 <div class="relative group">
                     <div class="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full blur opacity-20 group-hover:opacity-40 transition"></div>
                     <div class="relative bg-[#252f3f] rounded-full p-2 pl-6 flex items-center justify-between shadow-2xl border border-gray-600">
-                        <input type="text" id="email-address" readonly value="Loading..." 
+                        <input type="text" id="email-address" readonly value="Generating..." 
                             class="bg-transparent text-gray-200 text-sm sm:text-base w-full outline-none font-mono truncate mr-2 placeholder-gray-500">
                         
                         <div class="flex items-center gap-2 shrink-0">
@@ -121,29 +116,51 @@
         </div>
 
         <div class="max-w-4xl mx-auto w-full px-4 mb-8">
-            <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden min-h-[400px] flex flex-col relative">
-                <div class="bg-[#1a202c] text-white flex text-xs font-bold uppercase tracking-wider py-3.5 px-5">
+            <div id="inbox-container" class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden min-h-[400px] flex flex-col relative">
+                
+                <div id="list-header" class="bg-[#1a202c] text-white flex text-xs font-bold uppercase tracking-wider py-3.5 px-5">
                     <div class="w-1/3">Sender</div>
                     <div class="w-1/2">Subject</div>
                     <div class="w-1/6 text-right flex items-center justify-end gap-2">
                         View
-                        <div id="header-loader" class="loader-spin hidden" style="width:14px; height:14px; border-width: 2px;"></div>
+                        <div id="header-loader" class="hidden w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                     </div>
                 </div>
 
                 <div id="inboxList" class="relative flex-1 bg-white">
+                    
                     <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center py-20 text-gray-400 space-y-4">
-                        <div class="p-4 bg-gray-50 rounded-full">
-                            <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        <div class="relative p-4">
+                            <div class="absolute inset-0 flex items-center justify-center z-10">
+                                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+                                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                                </svg>
+                            </div>
+                            <div id="main-spinner" class="w-16 h-16 border-4 border-gray-100 border-t-indigo-500 rounded-full hidden"></div>
                         </div>
+                        
                         <div class="text-center">
                             <p class="text-gray-800 font-medium mb-1">Your inbox is empty</p>
-                            <div class="flex items-center justify-center gap-2">
-                                <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-                                <p class="text-xs text-gray-500">Waiting for incoming emails...</p>
-                            </div>
+                            <p id="status-text" class="text-xs text-gray-500 transition-opacity duration-300 opacity-50">Waiting for incoming emails...</p>
                         </div>
                     </div>
+
+                </div>
+
+                <div id="email-detail-view" class="hidden absolute inset-0 bg-white z-20 flex-col">
+                    <div class="bg-gray-800 text-white px-4 py-3 flex justify-between items-center shadow-md">
+                        <button onclick="backToInbox()" class="flex items-center gap-2 text-sm font-semibold hover:text-gray-300 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                            BACK TO LIST
+                        </button>
+                        <div class="flex items-center gap-4 text-sm font-medium">
+                            <button onclick="deleteEmail()" class="hover:text-red-400 transition">Delete</button>
+                            <button class="hover:text-indigo-300 transition">Source</button>
+                        </div>
+                    </div>
+                    <div id="email-content-body" class="flex-1 overflow-y-auto bg-white p-0">
+                        </div>
                 </div>
 
                 <div id="change-overlay" class="hidden absolute inset-0 bg-white z-30 flex-col fade-in">
@@ -188,7 +205,7 @@
                 <h3 class="text-xl font-bold text-gray-800 pl-2 border-l-4 border-indigo-500 mb-6">Latest Articles</h3>
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="articles-grid"></div>
             </div>
-
+            
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                 <h3 class="text-xl font-bold text-gray-800 mb-4">Frequently Asked Questions</h3>
                 <div class="space-y-2">
@@ -201,7 +218,8 @@
                 </div>
             </div>
         </div>
-         <footer class="bg-[#1a202c] text-gray-400 py-10 mt-auto">
+
+        <footer class="bg-[#1a202c] text-gray-400 py-10 mt-auto">
             <div class="max-w-4xl mx-auto px-4 text-center">
                 <div class="w-full h-16 bg-gray-800 border border-gray-700 rounded mb-8 flex items-center justify-center text-xs">Adsterra Footer Ad</div>
                 
@@ -226,24 +244,23 @@
             <div class="w-8"></div>
         </div>
         <div id="overlay-content" class="max-w-3xl mx-auto p-4 md:p-6 w-full flex-grow"></div>
-    </div>
+    </div>  
 
     <script>
         const API = "https://api.mail.tm";
         const emailEl = document.getElementById("email-address");
         const inboxList = document.getElementById("inboxList");
         const timerEl = document.getElementById("timer");
-        const headerLoader = document.getElementById("header-loader");
+        const detailView = document.getElementById("email-detail-view");
+        const listHeader = document.getElementById("list-header");
         
         let timerInterval, loaderInterval;
         let timeLeft = 600;
 
-        // --- CONTENT GENERATORS (For 800+ Words) ---
+        // --- CONTENT GENERATORS (Preserved from your file) ---
         function generateLongText(topic) {
             let html = `<p class="mb-4"><strong>${topic}</strong> is a critical aspect of digital life. This comprehensive guide explores why ${topic} matters, how it works, and what you need to know.</p>`;
             html += `<h3 class="text-lg font-bold mt-6 mb-2">Detailed Overview</h3><p class="mb-4">In today's interconnected world, ${topic} plays a vital role. Whether you are a casual user or a professional, understanding the nuances of ${topic} can save you time and protect your data. We have seen a significant rise in the importance of ${topic} over the last decade.</p>`;
-            
-            // Generate heavy filler content to reach word count approximation
             for(let i=1; i<=6; i++) {
                 html += `<h3 class="text-lg font-bold mt-6 mb-2">Section ${i}: Deep Dive into ${topic}</h3>`;
                 html += `<p class="mb-4">As we delve deeper into section ${i}, it becomes clear that ${topic} involves multiple layers of complexity. First, consider the user experience. When interacting with systems designed for ${topic}, efficiency is key. Second, security is paramount. The protocols surrounding ${topic} are designed to be robust against modern threats. Experts suggest that neglecting ${topic} can lead to significant vulnerabilities.</p>`;
@@ -251,7 +268,6 @@
                 html += `<p class="mb-4">Another aspect to consider is the environmental impact of digital services related to ${topic}. While often overlooked, efficient code and server management in ${topic} can contribute to a greener web. This sustainability angle is becoming increasingly relevant for tech companies worldwide.</p>`;
                 html += `<p class="mb-4">Moreover, the global reach of ${topic} means that cross-border regulations often apply. Understanding the legal framework surrounding ${topic} in different jurisdictions is crucial for compliance. This is especially true for businesses operating internationally.</p>`;
             }
-            
             html += `<h3 class="text-lg font-bold mt-6 mb-2">Conclusion</h3><p class="mb-4">To summarize, ${topic} is an indispensable tool. By mastering the concepts outlined in this detailed article, you are better equipped to navigate the digital landscape safely and efficiently.</p>`;
             return html;
         }
@@ -263,7 +279,6 @@
                 html += `<p class="mb-4">At Mailvex, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website.</p>`;
                 html += `<h3 class="text-xl font-bold mt-6 mb-3">1. Information We Collect</h3><p class="mb-4">We adhere to a strict no-logs policy. However, to provide our service, we may process:</p><ul class="list-disc pl-5 mb-4 space-y-2"><li><strong>Temporary Email Data:</strong> The emails you receive are stored temporarily on our volatile servers and are deleted permanently when your session expires or when you delete them.</li><li><strong>Usage Data:</strong> We may collect anonymous data such as browser type and operating system to improve site performance.</li><li><strong>Cookies:</strong> We use cookies to maintain your session state.</li></ul>`;
                 html += `<h3 class="text-xl font-bold mt-6 mb-3">2. How We Use Your Information</h3><p class="mb-4">The limited information we collect is used solely to:</p><ul class="list-disc pl-5 mb-4"><li>Provide and maintain the Service.</li><li>Detect and prevent fraud or abuse.</li><li>Monitor the usage of the Service.</li></ul>`;
-                // Add filler for length
                 for(let i=0; i<4; i++) {
                     html += `<p class="mb-4">We are committed to data minimization. We do not sell, trade, or rent your personal identification information to others. Our business model relies on non-intrusive advertising, not data mining. We implement a variety of security measures to maintain the safety of your personal information when you enter, submit, or access your personal information.</p>`;
                     html += `<p class="mb-4">Security of your data is important to us, but remember that no method of transmission over the Internet, or method of electronic storage is 100% secure. While we strive to use commercially acceptable means to protect your Personal Data, we cannot guarantee its absolute security.</p>`;
@@ -274,7 +289,6 @@
                 html += `<p class="mb-4">By accessing this website we assume you accept these terms and conditions. Do not continue to use Mailvex if you do not agree to take all of the terms and conditions stated on this page.</p>`;
                 html += `<h3 class="text-xl font-bold mt-6 mb-3">1. License</h3><p class="mb-4">Unless otherwise stated, Mailvex and/or its licensors own the intellectual property rights for all material on Mailvex. All intellectual property rights are reserved.</p>`;
                 html += `<h3 class="text-xl font-bold mt-6 mb-3">2. User Restrictions</h3><p class="mb-4">You are specifically restricted from all of the following:</p><ul class="list-disc pl-5 mb-4"><li>Using this website in any way that is or may be damaging to this website.</li><li>Using this website in any way that impacts user access to this website.</li><li>Using this website contrary to applicable laws and regulations.</li><li>Engaging in any data mining, data harvesting, data extracting or any other similar activity.</li></ul>`;
-                // Filler
                 for(let i=0; i<4; i++) {
                      html += `<p class="mb-4">Certain areas of this website are restricted from being accessed by you and Mailvex may further restrict access by you to any areas of this website, at any time, in absolute discretion. Any user ID and password you may have for this website are confidential and you must maintain confidentiality as well.</p>`;
                      html += `<p class="mb-4">Your Content must be your own and must not be invading any third-party’s rights. Mailvex reserves the right to remove any of Your Content from this Website at any time without notice.</p>`;
@@ -304,11 +318,14 @@
 
         window.onload = () => {
             renderArticles();
-            // STARTUP LOGIC: Always New Email on Load
+            ensureEmptyStateExists(); 
             createAccount();
         };
 
+        // --- ACCOUNT & API ---
         async function createAccount(domain=null) {
+            backToInbox(); // Ensure we are on list view
+            ensureEmptyStateExists();
             emailEl.value = "Generating...";
             try {
                 const dData = await api("/domains");
@@ -325,7 +342,7 @@
                 
                 timeLeft = 600;
                 startTimer();
-                startContinuousLoader();
+                startContinuousLoader(); // Start the 2s/5s loop
             } catch(e) { console.error(e); }
         }
 
@@ -333,8 +350,207 @@
             const token = localStorage.getItem("tm_token");
             const headers = { "Content-Type": "application/json" };
             if (token) headers["Authorization"] = `Bearer ${token}`;
-            const res = await fetch(API + path, { method, headers, body: body ? JSON.stringify(body) : null });
-            return res.ok ? res.json() : null;
+            try {
+                const res = await fetch(API + path, { method, headers, body: body ? JSON.stringify(body) : null });
+                return res.ok ? res.json() : null;
+            } catch (err) { return null; }
+        }
+
+        // --- UPDATED LOADER LOGIC (2s Run / 5s Wait) ---
+        function startContinuousLoader() {
+            if(loaderInterval) clearInterval(loaderInterval);
+            
+            const runCycle = () => {
+                const spinner = document.getElementById('main-spinner');
+                const statusText = document.getElementById('status-text');
+                const headerSpin = document.getElementById('header-loader');
+                
+                // 1. Show Animation (2s)
+                if(spinner) {
+                    spinner.classList.remove('hidden'); 
+                    spinner.classList.add('animate-spin'); 
+                }
+                if(headerSpin) headerSpin.classList.remove('hidden'); // Also show header spinner
+                if(statusText) statusText.style.opacity = "1";
+                
+                refreshInbox(); 
+
+                // 2. Hide Animation after 2s
+                setTimeout(() => {
+                    if(spinner) {
+                        spinner.classList.remove('animate-spin');
+                        spinner.classList.add('hidden'); // Completely hide center spinner
+                    }
+                    if(headerSpin) headerSpin.classList.add('hidden'); // Hide header spinner
+                    if(statusText) statusText.style.opacity = "0.5";
+                }, 2000);
+            };
+
+            // Run Immediately
+            runCycle();
+            
+            // Loop every 7 seconds (2s run + 5s wait)
+            loaderInterval = setInterval(() => {
+                runCycle();
+            }, 7000); 
+        }
+
+       async function refreshInbox() {
+        const data = await api("/messages");
+        if (!data) return;
+
+        const msgs = data['hydra:member'];
+        const emptyState = document.getElementById('empty-state');
+        
+        // Purane mail items ko remove karein
+        const oldItems = inboxList.querySelectorAll('.mail-item');
+        oldItems.forEach(el => el.remove());
+
+        if (msgs.length > 0) {
+            // YAHAN CHANGE HAI: 'hidden' wali line ko comment ya delete kar dein
+            // emptyState.classList.add('hidden'); 
+            
+            msgs.forEach(m => {
+            const el = document.createElement('div');
+            // 'relative' aur 'z-50' add kiya hai taki click hamesha work kare
+            el.className = "mail-item relative z-50 flex items-center py-4 px-5 border-b border-gray-100 hover:bg-gray-50 cursor-pointer bg-white transition fade-in";
+            
+            // Click event ko sahi se bind karein
+            el.addEventListener('click', (e) => {
+                e.preventDefault();
+                openEmailInView(m.id);
+            });
+
+            el.innerHTML = `
+                <div class="w-1/3 text-xs font-bold text-gray-800 truncate pr-2 pointer-events-none">${m.from.address}</div>
+                <div class="w-1/2 text-xs text-gray-600 truncate pr-2 font-medium pointer-events-none">${m.subject || '(No Subject)'}</div>
+                <div class="w-1/6 text-right pointer-events-none"><span class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded font-bold border border-indigo-100">OPEN</span></div>
+            `;
+            inboxList.appendChild(el);
+        });
+        }
+        // Hamesha ensure karein ki animation visible rahe
+        if(emptyState) emptyState.classList.remove('hidden');
+    }
+
+        // --- NEW EMAIL VIEW LOGIC (Inside Box) ---
+        async function openEmailInView(id) {
+            // UI Switch: Hide List, Show Detail
+            detailView.classList.remove('hidden');
+            detailView.classList.add('flex');
+            listHeader.classList.add('hidden');
+            inboxList.classList.add('hidden');
+            
+            const contentBody = document.getElementById('email-content-body');
+            contentBody.innerHTML = '<div class="flex items-center justify-center h-40"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div></div>';
+
+            const data = await api(`/messages/${id}`);
+            const senderInitial = data.from.address.charAt(0).toUpperCase();
+            const dateStr = new Date(data.createdAt).toLocaleString();
+            const subject = data.subject || "(No Subject)";
+
+            contentBody.innerHTML = `
+                <div class="border-b border-gray-200 p-6 flex items-start gap-4">
+                    <div class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-lg font-bold text-indigo-600 bg-gray-50 flex-shrink-0">
+                        ${senderInitial}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-start">
+                            <h2 class="font-bold text-gray-800 text-sm truncate">${data.from.name || data.from.address.split('@')[0]}</h2>
+                            <span class="text-xs text-gray-400 font-mono ml-2 whitespace-nowrap">Date: ${dateStr.split(',')[0]}</span>
+                        </div>
+                        <p class="text-xs text-gray-500 truncate">${data.from.address}</p>
+                    </div>
+                </div>
+                
+                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                     <span class="text-xs text-gray-400 font-bold uppercase tracking-wider mr-2">Subject:</span>
+                     <span class="text-sm font-medium text-gray-800">${subject}</span>
+                </div>
+                
+                <div class="p-6">
+                    <div class="prose prose-sm max-w-none text-gray-700 font-sans leading-relaxed whitespace-pre-wrap">${data.text || "No text content available."}</div>
+                </div>
+            `;
+        }
+
+        function backToInbox() {
+            detailView.classList.add('hidden');
+            detailView.classList.remove('flex');
+            listHeader.classList.remove('hidden');
+            inboxList.classList.remove('hidden');
+            refreshInbox();
+        }
+
+        // --- UTILITIES ---
+        function ensureEmptyStateExists() {
+            const emptyState = document.getElementById('empty-state');
+            if(emptyState) {
+                emptyState.classList.remove('hidden');
+            } else {
+                // Reinject if missing
+                inboxList.innerHTML = `
+                    <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center py-20 text-gray-400 space-y-4">
+                        <div class="relative p-4">
+                            <div class="absolute inset-0 flex items-center justify-center z-10">
+                                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path></svg>
+                            </div>
+                            <div id="main-spinner" class="w-16 h-16 border-4 border-gray-100 border-t-indigo-500 rounded-full hidden"></div>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-gray-800 font-medium mb-1">Your inbox is empty</p>
+                            <p id="status-text" class="text-xs text-gray-500 transition-opacity duration-300 opacity-50">Waiting for incoming emails...</p>
+                        </div>
+                    </div>`;
+            }
+        }
+
+        function deleteEmail() {
+            backToInbox();
+            emailEl.value = "Deleting...";
+            inboxList.innerHTML = ''; 
+            ensureEmptyStateExists(); 
+            localStorage.removeItem("tm_token");
+            localStorage.removeItem("tm_address");
+            setTimeout(() => { createAccount(); }, 1000); 
+        }
+
+        function copyEmail() {
+            // 1. Text ko select karein
+            const textToCopy = emailEl.value;
+
+            // 2. Copy karne ka logic (Modern + Fallback for all browsers)
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(textToCopy);
+            } else {
+                // Fallback: Agar clipboard API block ho to ye kaam karega
+                const textArea = document.createElement("textarea");
+                textArea.value = textToCopy;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+            }
+
+            // 3. Icon Change Logic (1 second ke liye Tick dikhega)
+            const btn = document.getElementById('copy-btn');
+            if (btn) {
+                const originalHTML = btn.innerHTML; // Purana copy icon save karein
+                
+                // Tick (Checkmark) icon dikhayein
+                btn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+                
+                // EXACTLY 1 second (1000ms) baad wapas purana icon layein
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                }, 1000); 
+            }
+        }
+        
+        function manualRefresh() {
+            const icon = document.getElementById('refresh-icon');
+            if(icon) icon.classList.add('animate-spin');
+            refreshInbox().then(() => setTimeout(() => { if(icon) icon.classList.remove('animate-spin'); }, 1000));
         }
 
         function startTimer() {
@@ -346,149 +562,25 @@
                 timerEl.innerText = `${m}:${s < 10 ? '0'+s : s}`;
                 if(timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    createAccount(); // AUTO REGEN
+                    createAccount(); 
                 }
             }, 1000);
         }
 
-        function startContinuousLoader() {
-            if(loaderInterval) clearInterval(loaderInterval);
-            refreshInbox();
-            loaderInterval = setInterval(() => {
-                headerLoader.classList.remove('hidden');
-                refreshInbox().then(() => {
-                    setTimeout(() => headerLoader.classList.add('hidden'), 1000);
-                });
-            }, 5000);
-        }
-
-        async function refreshInbox() {
-            const data = await api("/messages");
-            if (!data) return;
-
-            const msgs = data['hydra:member'];
-            const emptyState = document.getElementById('empty-state');
-            const oldItems = inboxList.querySelectorAll('.mail-item');
-            oldItems.forEach(el => el.remove());
-
-            if (msgs.length > 0) {
-                emptyState.classList.add('hidden');
-                msgs.forEach(m => {
-                    const el = document.createElement('div');
-                    el.className = "mail-item flex items-center py-4 px-5 border-b border-gray-100 hover:bg-gray-50 cursor-pointer bg-white transition fade-in";
-                    el.onclick = () => openOverlay('email', m.id);
-                    el.innerHTML = `
-                        <div class="w-1/3 text-xs font-bold text-gray-800 truncate pr-2">${m.from.address}</div>
-                        <div class="w-1/2 text-xs text-gray-600 truncate pr-2 font-medium">${m.subject || '(No Subject)'}</div>
-                        <div class="w-1/6 text-right"><span class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded font-bold border border-indigo-100">OPEN</span></div>
-                    `;
-                    inboxList.appendChild(el);
-                });
-            } else {
-                emptyState.classList.remove('hidden');
-            }
-        }
-
-        function copyEmail() {
-            navigator.clipboard.writeText(emailEl.value);
-            const btn = document.getElementById('copy-btn');
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
-            setTimeout(() => btn.innerHTML = originalHTML, 1500);
-        }
-        
-        function manualRefresh() {
-            const icon = document.getElementById('refresh-icon');
-            icon.classList.add('animate-spin');
-            refreshInbox().then(() => setTimeout(() => icon.classList.remove('animate-spin'), 1000));
-        }
-
-        function deleteEmail() {
-            // 1. Immediate UI feedback
-            emailEl.value = "Deleting...";
-            inboxList.innerHTML = ''; // Clear inbox
-            localStorage.removeItem("tm_token"); // Clear session
-
-            // 2. Generate new within 2 seconds
-            setTimeout(() => {
-                createAccount();
-            }, 1000); 
-        }
-
-        function toggleQR() {
-            const popup = document.getElementById('qr-popup');
-            const cont = document.getElementById('qr-image-container');
-            const email = emailEl.value;
-            if(popup.classList.contains('hidden')) {
-                if(email && email !== "Loading...") {
-                    cont.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${email}" class="w-full h-full object-contain">`;
-                    popup.classList.remove('hidden');
-                }
-            } else {
-                popup.classList.add('hidden');
-            }
-        }
-        
-        async function openOverlay(type, id) {
+        // Overlay handling (Only for Pages/Articles now)
+        function openOverlay(type, id) {
             const view = document.getElementById('overlay-view');
             const content = document.getElementById('overlay-content');
             const title = document.getElementById('overlay-title');
             view.classList.remove('hidden');
-            document.body.style.overflow = 'hidden'; // Lock background scroll
+            document.body.style.overflow = 'hidden'; 
             
-            if(type === 'email') {
-                const data = await api(`/messages/${id}`);
-                title.innerText = "Email Message";
-                
-                // Format: DP Icon | Sender | Date
-                const senderInitial = data.from.address.charAt(0).toUpperCase();
-                const dateStr = new Date(data.createdAt).toLocaleString();
-                const subject = data.subject || "(No Subject)";
-
-                content.innerHTML = `
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                        <div class="bg-gray-50 px-4 py-4 border-b border-gray-100 flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-lg shadow-sm">
-                                    ${senderInitial}
-                                </div>
-                                <div class="flex flex-col">
-                                    <span class="text-sm font-bold text-gray-800">${data.from.address}</span>
-                                    <span class="text-xs text-gray-500">To: Me</span>
-                                </div>
-                            </div>
-                            <div class="text-xs text-gray-400 font-mono text-right">
-                                ${dateStr}
-                            </div>
-                        </div>
-
-                        <div class="px-6 py-4 bg-white">
-                             <h2 class="text-xl font-bold text-gray-900 leading-tight">${subject}</h2>
-                        </div>
-                        
-                        <div class="px-6 pb-6">
-                            <hr class="border-gray-100 mb-4">
-                            <div class="prose prose-sm max-w-none text-gray-700 font-sans leading-relaxed whitespace-pre-wrap">
-                                ${data.text || "No text content available."}
-                            </div>
-                        </div>
-                    </div>
-                `;
-
-            } else if (type === 'article') {
+            if (type === 'article') {
                 const art = articles.find(a => a.id === id);
                 title.innerText = "Article";
-                content.innerHTML = `
-                    <article class="bg-white p-6 rounded-lg shadow-sm border">
-                        <h1 class="text-2xl font-bold mb-4 text-gray-900">${art.title}</h1>
-                        <div class="leading-relaxed text-gray-700 space-y-4">
-                            ${art.content}
-                        </div>
-                    </article>
-                `;
+                content.innerHTML = `<article class="bg-white p-6 rounded-lg shadow-sm border"><h1 class="text-2xl font-bold mb-4 text-gray-900">${art.title}</h1><div class="leading-relaxed text-gray-700 space-y-4">${art.content}</div></article>`;
             } else if (type === 'page') {
-                // Handling for Privacy, Terms, Cookies, Contact
-                if(id === 'contact') {
+                 if(id === 'contact') {
                     title.innerText = "Contact Us";
                     content.innerHTML = `
                         <div class="bg-white p-8 rounded-lg shadow-sm border">
@@ -517,36 +609,21 @@
                 }
             }
         }
-
+        
         function handleContact(e) {
             e.preventDefault();
             const name = document.getElementById('c-name').value;
             const msg = document.getElementById('c-msg').value;
             window.location.href = `mailto:jhonhamare@gmail.com?subject=Contact from ${name}&body=${msg}`;
         }
-
-        function closeOverlay() { 
-            document.getElementById('overlay-view').classList.add('hidden'); 
-            document.body.style.overflow = 'auto'; // Unlock scroll
-        }
+        
+        function closeOverlay() { document.getElementById('overlay-view').classList.add('hidden'); document.body.style.overflow = 'auto'; }
         function openPage(p) { openOverlay('page', p); }
         
-        function renderArticles() {
-            const grid = document.getElementById('articles-grid');
-            articles.forEach(a => {
-                const d = document.createElement('div');
-                d.className = "bg-white p-5 rounded-lg border border-gray-200 hover:shadow-lg cursor-pointer transition flex flex-col justify-between";
-                d.innerHTML = `<div><h4 class="font-bold text-gray-800 mb-2">${a.title}</h4><p class="text-xs text-gray-500 line-clamp-3">Click to read this comprehensive guide on ${a.title}...</p></div><div class="mt-4 text-indigo-500 text-xs font-bold">Read Full Guide &rarr;</div>`;
-                d.onclick = () => openOverlay('article', a.id);
-                grid.appendChild(d);
-            });
-        }
-
         async function openChangeOverlay() {
             const ov = document.getElementById('change-overlay');
             const list = document.getElementById('domain-list');
-            ov.classList.remove('hidden');
-            ov.classList.add('flex');
+            ov.classList.remove('hidden'); ov.classList.add('flex');
             const dData = await api("/domains");
             list.innerHTML = "";
             dData['hydra:member'].forEach(d => {
@@ -558,14 +635,18 @@
             });
         }
         function closeChangeOverlay() { document.getElementById('change-overlay').classList.add('hidden'); }
+        function toggleQR() { const q = document.getElementById('qr-popup'); const c = document.getElementById('qr-image-container'); if(q.classList.contains('hidden')){ c.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${emailEl.value}" class="w-full h-full">`; q.classList.remove('hidden'); } else { q.classList.add('hidden'); } }
 
-        document.addEventListener('click', (e) => {
-            const qr = document.getElementById('qr-popup');
-            const btn = document.querySelector('button[title="QR Code"]');
-            if(!qr.classList.contains('hidden') && !qr.contains(e.target) && !btn.contains(e.target)) {
-                qr.classList.add('hidden');
-            }
-        });
+        function renderArticles() {
+            const grid = document.getElementById('articles-grid');
+            articles.forEach(a => {
+                const d = document.createElement('div');
+                d.className = "bg-white p-5 rounded-lg border border-gray-200 hover:shadow-lg cursor-pointer transition flex flex-col justify-between";
+                d.innerHTML = `<div><h4 class="font-bold text-gray-800 mb-2">${a.title}</h4><p class="text-xs text-gray-500 line-clamp-3">Click to read this comprehensive guide on ${a.title}...</p></div><div class="mt-4 text-indigo-500 text-xs font-bold">Read Full Guide &rarr;</div>`;
+                d.onclick = () => openOverlay('article', a.id);
+                grid.appendChild(d);
+            });
+        }
     </script>
 </body>
 </html>
